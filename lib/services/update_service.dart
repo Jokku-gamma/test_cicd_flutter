@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -32,7 +32,6 @@ class UpdateService {
   static const String githubOwner = 'Jokku-gamma';
 
   static const String githubRepository = 'test_cicd_flutter';
-
   /*
    * ============================================================
    * GitHub API URL
@@ -314,126 +313,137 @@ class UpdateService {
    */
 
   static Future<String> downloadApk(
-    String downloadUrl, {
-    void Function(double progress)?
-        onProgress,
-  }) async {
-    print(
-      'Starting APK download...',
-    );
+  String downloadUrl, {
+  void Function(double progress)? onProgress,
+}) async {
+  print('Starting APK download...');
+  print('Download URL: $downloadUrl');
 
-    /*
-     * Download from GitHub.
-     */
+  final client = http.Client();
 
-    final response =
-        await http.get(
+  try {
+    final request = http.Request(
+      'GET',
       Uri.parse(downloadUrl),
     );
 
+    final response = await client.send(request);
+
+    print('Download HTTP status: ${response.statusCode}');
+    print('Content length: ${response.contentLength}');
+
     if (response.statusCode != 200) {
       throw Exception(
-        'APK download failed. '
-        'HTTP ${response.statusCode}',
+        'APK download failed. HTTP ${response.statusCode}',
       );
     }
 
-    /*
-     * Get temporary application directory.
-     */
+    final directory = await getTemporaryDirectory();
 
-    final directory =
-        await getTemporaryDirectory();
+    final apkPath = '${directory.path}/app-update.apk';
 
-    /*
-     * APK file location.
-     */
+    final apkFile = File(apkPath);
 
-    final apkPath =
-        '${directory.path}/app-update.apk';
+    // Delete old APK if it exists.
+    if (await apkFile.exists()) {
+      await apkFile.delete();
+    }
 
-    final apkFile =
-        File(apkPath);
+    final sink = apkFile.openWrite();
 
-    /*
-     * Save APK.
-     */
+    int downloadedBytes = 0;
 
-    await apkFile.writeAsBytes(
-      response.bodyBytes,
-      flush: true,
-    );
+    final totalBytes = response.contentLength;
 
-    /*
-     * Report completed download.
-     */
+    try {
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
 
+        downloadedBytes += chunk.length;
+
+        if (totalBytes != null && totalBytes > 0) {
+          final progress = downloadedBytes / totalBytes;
+
+          onProgress?.call(progress.clamp(0.0, 1.0));
+
+          print(
+            'Download progress: '
+            '${(progress * 100).toStringAsFixed(1)}%',
+          );
+        }
+      }
+    } finally {
+      await sink.close();
+    }
+
+    // Verify the complete APK was downloaded.
+    if (totalBytes != null &&
+        downloadedBytes != totalBytes) {
+      throw Exception(
+        'APK download incomplete. '
+        'Downloaded $downloadedBytes of $totalBytes bytes.',
+      );
+    }
+
+    // Final progress.
     onProgress?.call(1.0);
 
-    print(
-      'APK downloaded to: $apkPath',
-    );
+    final fileExists = await apkFile.exists();
+
+    if (!fileExists) {
+      throw Exception(
+        'APK file was not created.',
+      );
+    }
+
+    final fileSize = await apkFile.length();
+
+    print('APK downloaded successfully.');
+    print('APK path: $apkPath');
+    print('APK size: $fileSize bytes');
 
     return apkPath;
+  } finally {
+    client.close();
   }
-
+}
   /*
    * ============================================================
    * DOWNLOAD AND OPEN INSTALLER
    * ============================================================
    */
+static const MethodChannel _installerChannel =
+    MethodChannel('apk_installer');
 
-  static Future<void> downloadAndInstall(
-    String downloadUrl, {
-    void Function(double progress)?
-        onProgress,
-  }) async {
-    /*
-     * Download APK.
-     */
+static Future<void> downloadAndInstall(
+  String downloadUrl, {
+  void Function(double progress)? onProgress,
+}) async {
+  final apkPath = await downloadApk(
+    downloadUrl,
+    onProgress: onProgress,
+  );
 
-    final apkPath =
-        await downloadApk(
-      downloadUrl,
-      onProgress: onProgress,
+  print('APK downloaded.');
+  print('Opening Android Package Installer...');
+
+  try {
+    await _installerChannel.invokeMethod(
+      'installApk',
+      {
+        'apkPath': apkPath,
+      },
     );
 
-    print(
-      'Opening Android installer...',
+    print('Android installer launched.');
+  } on PlatformException catch (e) {
+    print('Installation failed.');
+    print('Code: ${e.code}');
+    print('Message: ${e.message}');
+
+    throw Exception(
+      'Could not open Android Package Installer: ${e.message}',
     );
-
-    /*
-     * Open APK using Android's
-     * package installer.
-     */
-
-    final result =
-        await OpenFilex.open(
-      apkPath,
-      type:
-          'application/vnd.android.package-archive',
-    );
-
-    print(
-      'Installer result type: '
-      '${result.type}',
-    );
-
-    print(
-      'Installer result message: '
-      '${result.message}',
-    );
-
-    /*
-     * If Android could not open the APK,
-     * throw an error so the UI can display it.
-     */
-
-    if (result.type != ResultType.done) {
-      throw Exception(
-        'Could not open Android installer: '
-        '${result.message}',
-      );
-    }
   }
+}
 }
