@@ -14,12 +14,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-
       title: 'CI/CD Update Demo',
 
+      // VERSION 1.0.1 CHANGE
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
+          seedColor: Colors.green,
         ),
         useMaterial3: true,
       ),
@@ -33,34 +33,16 @@ class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
   @override
-  State<MyHomePage> createState() =>
-      _MyHomePageState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState
-    extends State<MyHomePage> {
-
-  /*
-   * Current installed version.
-   */
-
+class _MyHomePageState extends State<MyHomePage> {
   String currentVersion = 'Loading...';
-
   String currentBuildNumber = '';
-
-  /*
-   * Information about the update,
-   * if one exists.
-   */
 
   UpdateInfo? updateInfo;
 
-  /*
-   * UI states.
-   */
-
   bool checkingForUpdate = false;
-
   bool downloading = false;
 
   double downloadProgress = 0;
@@ -71,66 +53,33 @@ class _MyHomePageState
   void initState() {
     super.initState();
 
-    /*
-     * Load current version.
-     */
-
     _loadAppVersion();
-
-    /*
-     * Check GitHub for an update.
-     */
-
     _checkForUpdate();
   }
-
-  /*
-   * ============================================================
-   * LOAD CURRENT APP VERSION
-   * ============================================================
-   */
 
   Future<void> _loadAppVersion() async {
     try {
       final packageInfo =
           await PackageInfo.fromPlatform();
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
-        currentVersion =
-            packageInfo.version;
-
-        currentBuildNumber =
-            packageInfo.buildNumber;
+        currentVersion = packageInfo.version;
+        currentBuildNumber = packageInfo.buildNumber;
       });
     } catch (e) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
-        currentVersion =
-            'Unknown';
-
-        currentBuildNumber =
-            '';
+        currentVersion = 'Unknown';
+        currentBuildNumber = '';
       });
     }
   }
 
-  /*
-   * ============================================================
-   * CHECK FOR UPDATE
-   * ============================================================
-   */
-
   Future<void> _checkForUpdate() async {
-    if (checkingForUpdate) {
-      return;
-    }
+    if (checkingForUpdate) return;
 
     setState(() {
       checkingForUpdate = true;
@@ -141,41 +90,27 @@ class _MyHomePageState
       final result =
           await UpdateService.checkForUpdate();
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         updateInfo = result;
         checkingForUpdate = false;
       });
     } catch (e) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         checkingForUpdate = false;
-
         errorMessage =
             'Could not check for updates.';
       });
     }
   }
 
-  /*
-   * ============================================================
-   * DOWNLOAD AND INSTALL
-   * ============================================================
-   */
-
   Future<void> _updateApplication() async {
-    final update =
-        updateInfo;
+    final update = updateInfo;
 
-    if (update == null) {
-      return;
-    }
+    if (update == null) return;
 
     setState(() {
       downloading = true;
@@ -186,38 +121,22 @@ class _MyHomePageState
     try {
       await UpdateService.downloadAndInstall(
         update.downloadUrl,
-
         onProgress: (progress) {
-          if (!mounted) {
-            return;
-          }
+          if (!mounted) return;
 
           setState(() {
-            downloadProgress =
-                progress;
+            downloadProgress = progress;
           });
         },
       );
-
-      /*
-       * Android installer has now been opened.
-       *
-       * The user will see the Android installation
-       * confirmation screen.
-       */
-
     } catch (e) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
-        errorMessage =
-            'Update failed: $e';
+        errorMessage = 'Update failed: $e';
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Update failed: $e',
@@ -225,9 +144,7 @@ class _MyHomePageState
         ),
       );
     } finally {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         downloading = false;
@@ -235,19 +152,10 @@ class _MyHomePageState
     }
   }
 
-  /*
-   * ============================================================
-   * UPDATE DIALOG
-   * ============================================================
-   */
-
   void _showUpdateDialog() {
-    final update =
-        updateInfo;
+    final update = updateInfo;
 
-    if (update == null) {
-      return;
-    }
+    if (update == null) return;
 
     showDialog(
       context: context,
@@ -255,15 +163,9 @@ class _MyHomePageState
         return AlertDialog(
           title: const Row(
             children: [
-              Icon(
-                Icons.system_update,
-              ),
-
+              Icon(Icons.system_update),
               SizedBox(width: 10),
-
-              Text(
-                'New Update',
-              ),
+              Text('New Update'),
             ],
           ),
 
@@ -271,9 +173,7 @@ class _MyHomePageState
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-
               children: [
-
                 Text(
                   'Version ${update.version} '
                   'is available.',
@@ -287,8 +187,7 @@ class _MyHomePageState
                   const Text(
                     'What is new?',
                     style: TextStyle(
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
 
@@ -303,33 +202,21 @@ class _MyHomePageState
           ),
 
           actions: [
-
             TextButton(
-              onPressed:
-                  () {
+              onPressed: () {
                 Navigator.pop(context);
               },
-
-              child: const Text(
-                'LATER',
-              ),
+              child: const Text('LATER'),
             ),
 
             ElevatedButton(
-              onPressed:
-                  downloading
-                      ? null
-                      : () {
-                          Navigator.pop(
-                            context,
-                          );
-
-                          _updateApplication();
-                        },
-
-              child: const Text(
-                'UPDATE NOW',
-              ),
+              onPressed: downloading
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      _updateApplication();
+                    },
+              child: const Text('UPDATE NOW'),
             ),
           ],
         );
@@ -337,32 +224,29 @@ class _MyHomePageState
     );
   }
 
-  /*
-   * ============================================================
-   * BUILD UI
-   * ============================================================
-   */
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:
+          Colors.green.shade50,
 
       appBar: AppBar(
+        backgroundColor:
+            Colors.green.shade700,
+
+        foregroundColor: Colors.white,
+
         title: const Text(
           'CI/CD Update Demo',
         ),
 
         actions: [
-
           IconButton(
-            tooltip:
-                'Check for updates',
-
+            tooltip: 'Check for updates',
             onPressed:
                 checkingForUpdate
                     ? null
                     : _checkForUpdate,
-
             icon: const Icon(
               Icons.refresh,
             ),
@@ -372,68 +256,63 @@ class _MyHomePageState
 
       body: Center(
         child: SingleChildScrollView(
-          padding:
-              const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
 
           child: Column(
             mainAxisAlignment:
                 MainAxisAlignment.center,
 
             children: [
-
               /*
-               * APP ICON
+               * =================================================
+               * BIG VERSION 1.0.1 CHANGE
+               * =================================================
                */
 
               const Icon(
                 Icons.rocket_launch,
-                size: 90,
+                size: 100,
+                color: Colors.green,
               ),
 
-              const SizedBox(
-                height: 24,
-              ),
-
-              /*
-               * TITLE
-               */
+              const SizedBox(height: 20),
 
               const Text(
-                'Flutter CI/CD Demo',
+                'CI/CD UPDATE SUCCESS!',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
                 ),
               ),
 
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10),
 
               const Text(
-                'GitHub Release Update System',
+                'This screen belongs to Version 1.0.1',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
 
-              const SizedBox(
-                height: 40,
-              ),
+              const SizedBox(height: 30),
 
               /*
-               * CURRENT VERSION CARD
+               * CURRENT VERSION
                */
 
               Card(
+                elevation: 4,
+
                 child: Padding(
                   padding:
-                      const EdgeInsets.all(20),
+                      const EdgeInsets.all(24),
 
                   child: Column(
                     children: [
-
                       const Text(
                         'Installed Version',
                         style: TextStyle(
@@ -441,24 +320,21 @@ class _MyHomePageState
                         ),
                       ),
 
-                      const SizedBox(
-                        height: 8,
-                      ),
+                      const SizedBox(height: 8),
 
                       Text(
                         'v$currentVersion',
                         style: const TextStyle(
-                          fontSize: 32,
+                          fontSize: 36,
                           fontWeight:
                               FontWeight.bold,
+                          color: Colors.green,
                         ),
                       ),
 
                       if (currentBuildNumber
                           .isNotEmpty) ...[
-                        const SizedBox(
-                          height: 5,
-                        ),
+                        const SizedBox(height: 5),
 
                         Text(
                           'Build $currentBuildNumber',
@@ -469,23 +345,18 @@ class _MyHomePageState
                 ),
               ),
 
-              const SizedBox(
-                height: 30,
-              ),
+              const SizedBox(height: 30),
 
               /*
-               * CHECKING
+               * UPDATE CHECK
                */
 
               if (checkingForUpdate)
                 const Column(
                   children: [
-
                     CircularProgressIndicator(),
 
-                    SizedBox(
-                      height: 15,
-                    ),
+                    SizedBox(height: 15),
 
                     Text(
                       'Checking GitHub for updates...',
@@ -493,16 +364,8 @@ class _MyHomePageState
                   ],
                 )
 
-              /*
-               * UPDATE AVAILABLE
-               */
-
               else if (updateInfo != null)
                 _buildUpdateAvailable()
-
-              /*
-               * NO UPDATE
-               */
 
               else
                 _buildUpToDate(),
@@ -512,15 +375,11 @@ class _MyHomePageState
                */
 
               if (errorMessage != null) ...[
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
 
                 Text(
                   errorMessage!,
-                  textAlign:
-                      TextAlign.center,
-
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color:
                         Theme.of(context)
@@ -536,45 +395,34 @@ class _MyHomePageState
     );
   }
 
-  /*
-   * ============================================================
-   * UPDATE AVAILABLE UI
-   * ============================================================
-   */
-
   Widget _buildUpdateAvailable() {
-    final update =
-        updateInfo!;
+    final update = updateInfo!;
 
     return Card(
+      elevation: 5,
+
       child: Padding(
-        padding:
-            const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
 
         child: Column(
           children: [
-
             const Icon(
               Icons.new_releases,
               size: 60,
+              color: Colors.orange,
             ),
 
-            const SizedBox(
-              height: 15,
-            ),
+            const SizedBox(height: 15),
 
             const Text(
-              'New Update Available!',
+              'NEW UPDATE AVAILABLE!',
               style: TextStyle(
                 fontSize: 22,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
 
             Text(
               'Version ${update.version}',
@@ -583,26 +431,17 @@ class _MyHomePageState
               ),
             ),
 
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
 
             if (update.releaseNotes
                 .trim()
                 .isNotEmpty)
               Text(
                 update.releaseNotes,
-                textAlign:
-                    TextAlign.center,
+                textAlign: TextAlign.center,
               ),
 
-            const SizedBox(
-              height: 20,
-            ),
-
-            /*
-             * DOWNLOAD PROGRESS
-             */
+            const SizedBox(height: 20),
 
             if (downloading) ...[
               LinearProgressIndicator(
@@ -612,9 +451,7 @@ class _MyHomePageState
                         : null,
               ),
 
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10),
 
               Text(
                 downloadProgress > 0
@@ -623,14 +460,8 @@ class _MyHomePageState
                     : 'Downloading update...',
               ),
 
-              const SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
             ],
-
-            /*
-             * UPDATE BUTTON
-             */
 
             SizedBox(
               width: double.infinity,
@@ -662,9 +493,7 @@ class _MyHomePageState
               ),
             ),
 
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
 
             TextButton(
               onPressed:
@@ -682,47 +511,33 @@ class _MyHomePageState
     );
   }
 
-  /*
-   * ============================================================
-   * UP TO DATE UI
-   * ============================================================
-   */
-
   Widget _buildUpToDate() {
     return Column(
       children: [
-
         const Icon(
           Icons.check_circle,
           size: 60,
+          color: Colors.green,
         ),
 
-        const SizedBox(
-          height: 15,
-        ),
+        const SizedBox(height: 15),
 
         const Text(
           'You are up to date!',
           style: TextStyle(
             fontSize: 20,
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
 
-        const SizedBox(
-          height: 8,
-        ),
+        const SizedBox(height: 8),
 
         const Text(
           'No new version is available.',
-          textAlign:
-              TextAlign.center,
+          textAlign: TextAlign.center,
         ),
 
-        const SizedBox(
-          height: 20,
-        ),
+        const SizedBox(height: 20),
 
         OutlinedButton.icon(
           onPressed:
