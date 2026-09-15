@@ -23,11 +23,6 @@ class UpdateInfo {
 }
 
 class UpdateService {
-  /*
-   * ============================================================
-   * CHANGE THESE TWO VALUES
-   * ============================================================
-   */
 
   static const String githubOwner = 'Jokku-gamma';
 
@@ -194,10 +189,6 @@ class UpdateService {
 
         return null;
       }
-
-      /*
-       * We found a newer release.
-       */
 
       return UpdateInfo(
         version: latestVersion,

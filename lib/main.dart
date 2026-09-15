@@ -9,7 +9,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  
 
   @override
   Widget build(BuildContext context) {
@@ -17,10 +16,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'CI/CD Update Demo',
 
-      // VERSION 1.0.1 CHANGE
+      // VERSION 1.0.2
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
+          seedColor: Colors.blue,
         ),
         useMaterial3: true,
       ),
@@ -58,11 +57,14 @@ class _MyHomePageState extends State<MyHomePage> {
     _checkForUpdate();
   }
 
+  // ============================================================
+  // LOAD CURRENT APP VERSION
+  // ============================================================
+
   Future<void> _loadAppVersion() async {
     try {
-      final packageInfo =
-          await PackageInfo.fromPlatform();
-
+      final packageInfo = await PackageInfo.fromPlatform();
+      
       if (!mounted) return;
 
       setState(() {
@@ -79,6 +81,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // ============================================================
+  // CHECK FOR UPDATE
+  // ============================================================
+
   Future<void> _checkForUpdate() async {
     if (checkingForUpdate) return;
 
@@ -88,8 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     try {
-      final result =
-          await UpdateService.checkForUpdate();
+      final result = await UpdateService.checkForUpdate();
 
       if (!mounted) return;
 
@@ -102,11 +107,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
       setState(() {
         checkingForUpdate = false;
-        errorMessage =
-            'Could not check for updates.';
+        errorMessage = 'Could not check for updates.';
       });
     }
   }
+
+  // ============================================================
+  // UPDATE APPLICATION
+  // ============================================================
 
   Future<void> _updateApplication() async {
     final update = updateInfo;
@@ -153,339 +161,331 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _showUpdateDialog() {
-    final update = updateInfo;
+  // ============================================================
+  // OPEN UPDATE DRAWER
+  // ============================================================
 
-    if (update == null) return;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.system_update),
-              SizedBox(width: 10),
-              Text('New Update'),
-            ],
-          ),
-
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Version ${update.version} '
-                  'is available.',
-                ),
-
-                const SizedBox(height: 20),
-
-                if (update.releaseNotes
-                    .trim()
-                    .isNotEmpty) ...[
-                  const Text(
-                    'What is new?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    update.releaseNotes,
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('LATER'),
-            ),
-
-            ElevatedButton(
-              onPressed: downloading
-                  ? null
-                  : () {
-                      Navigator.pop(context);
-                      _updateApplication();
-                    },
-              child: const Text('UPDATE NOW'),
-            ),
-          ],
-        );
-      },
-    );
+  void _openUpdateDrawer() {
+    Scaffold.of(context).openEndDrawer();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor:
-          Colors.green.shade50,
+  // ============================================================
+  // UPDATE DRAWER
+  // ============================================================
 
-      appBar: AppBar(
-        backgroundColor:
-            Colors.green.shade700,
-
-        foregroundColor: Colors.white,
-
-        title: const Text(
-          'CI/CD Update Demo',
-        ),
-
-        actions: [
-          IconButton(
-            tooltip: 'Check for updates',
-            onPressed:
-                checkingForUpdate
-                    ? null
-                    : _checkForUpdate,
-            icon: const Icon(
-              Icons.refresh,
-            ),
-          ),
-        ],
-      ),
-
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-
-          child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
-
-            children: [
-              /*
-               * =================================================
-               * BIG VERSION 1.0.1 CHANGE
-               * =================================================
-               */
-
-              const Icon(
-                Icons.rocket_launch,
-                size: 100,
-                color: Colors.green,
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                'CI/CD UPDATE SUCCESS!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              const Text(
-                'This screen belongs to Version 1.0.1',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              /*
-               * CURRENT VERSION
-               */
-
-              Card(
-                elevation: 4,
-
-                child: Padding(
-                  padding:
-                      const EdgeInsets.all(24),
-
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Installed Version',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Text(
-                        'v$currentVersion',
-                        style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight:
-                              FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-
-                      if (currentBuildNumber
-                          .isNotEmpty) ...[
-                        const SizedBox(height: 5),
-
-                        Text(
-                          'Build $currentBuildNumber',
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              /*
-               * UPDATE CHECK
-               */
-
-              if (checkingForUpdate)
-                const Column(
-                  children: [
-                    CircularProgressIndicator(),
-
-                    SizedBox(height: 15),
-
-                    Text(
-                      'Checking GitHub for updates...',
-                    ),
-                  ],
-                )
-
-              else if (updateInfo != null)
-                _buildUpdateAvailable()
-
-              else
-                _buildUpToDate(),
-
-              /*
-               * ERROR
-               */
-
-              if (errorMessage != null) ...[
-                const SizedBox(height: 20),
-
-                Text(
-                  errorMessage!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color:
-                        Theme.of(context)
-                            .colorScheme
-                            .error,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUpdateAvailable() {
-    final update = updateInfo!;
-
-    return Card(
-      elevation: 5,
-
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-
+  Widget _buildUpdateDrawer() {
+    return Drawer(
+      width: MediaQuery.of(context).size.width * 0.82,
+      child: SafeArea(
         child: Column(
           children: [
-            const Icon(
-              Icons.new_releases,
-              size: 60,
-              color: Colors.orange,
+            // ----------------------------------------------------
+            // DRAWER HEADER
+            // ----------------------------------------------------
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                    ),
+                    child: Icon(
+                      Icons.system_update,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onPrimaryContainer,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  const Expanded(
+                    child: Text(
+                      'Updates',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  IconButton(
+                    tooltip: 'Close',
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
             ),
 
-            const SizedBox(height: 15),
+            const Divider(height: 1),
 
-            const Text(
-              'NEW UPDATE AVAILABLE!',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+            // ----------------------------------------------------
+            // DRAWER CONTENT
+            // ----------------------------------------------------
+
+            Expanded(
+              child: _buildUpdateContent(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // UPDATE CONTENT INSIDE DRAWER
+  // ============================================================
+
+  Widget _buildUpdateContent() {
+    // ----------------------------------------------------------
+    // CHECKING
+    // ----------------------------------------------------------
+
+    if (checkingForUpdate) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(30),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+
+              SizedBox(height: 20),
+
+              Text(
+                'Checking GitHub for updates...',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ----------------------------------------------------------
+    // UPDATE AVAILABLE
+    // ----------------------------------------------------------
+
+    if (updateInfo != null) {
+      final update = updateInfo!;
+
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --------------------------------------------------
+            // UPDATE ICON
+            // --------------------------------------------------
+
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.orange.shade100,
+                ),
+                child: Icon(
+                  Icons.new_releases,
+                  size: 55,
+                  color: Colors.orange.shade800,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // --------------------------------------------------
+            // TITLE
+            // --------------------------------------------------
+
+            const Center(
+              child: Text(
+                'New Update Available!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
 
             const SizedBox(height: 8),
 
-            Text(
-              'Version ${update.version}',
-              style: const TextStyle(
-                fontSize: 18,
+            Center(
+              child: Text(
+                'Version ${update.version}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
-            if (update.releaseNotes
-                .trim()
-                .isNotEmpty)
-              Text(
-                update.releaseNotes,
-                textAlign: TextAlign.center,
+            // --------------------------------------------------
+            // CURRENT VERSION
+            // --------------------------------------------------
+
+            Card(
+              elevation: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Current version',
+                      style: TextStyle(
+                        fontSize: 13,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    Text(
+                      'v$currentVersion',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
-            if (downloading) ...[
-              LinearProgressIndicator(
-                value:
-                    downloadProgress > 0
-                        ? downloadProgress
-                        : null,
+            // --------------------------------------------------
+            // NEW VERSION
+            // --------------------------------------------------
+
+            Card(
+              elevation: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'New version',
+                      style: TextStyle(
+                        fontSize: 13,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    Text(
+                      'v${update.version}',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // --------------------------------------------------
+            // RELEASE NOTES
+            // --------------------------------------------------
+
+            if (update.releaseNotes.trim().isNotEmpty) ...[
+              const SizedBox(height: 25),
+
+              const Text(
+                'What is new?',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
 
               const SizedBox(height: 10),
 
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  update.releaseNotes,
+                  style: const TextStyle(
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 25),
+
+            // --------------------------------------------------
+            // DOWNLOAD PROGRESS
+            // --------------------------------------------------
+
+            if (downloading) ...[
               Text(
                 downloadProgress > 0
-                    ? 'Downloading '
-                        '${(downloadProgress * 100).toInt()}%'
+                    ? 'Downloading ${(downloadProgress * 100).toInt()}%'
                     : 'Downloading update...',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              LinearProgressIndicator(
+                value: downloadProgress > 0
+                    ? downloadProgress
+                    : null,
               ),
 
               const SizedBox(height: 20),
             ],
 
+            // --------------------------------------------------
+            // UPDATE BUTTON
+            // --------------------------------------------------
+
             SizedBox(
               width: double.infinity,
-
               child: ElevatedButton.icon(
-                onPressed:
-                    downloading
-                        ? null
-                        : _updateApplication,
-
+                onPressed: downloading
+                    ? null
+                    : _updateApplication,
                 icon: downloading
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child:
-                            CircularProgressIndicator(
+                        child: CircularProgressIndicator(
                           strokeWidth: 2,
                         ),
                       )
-                    : const Icon(
-                        Icons.download,
-                      ),
-
+                    : const Icon(Icons.download),
                 label: Text(
                   downloading
                       ? 'DOWNLOADING...'
@@ -494,16 +494,97 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
 
+            const SizedBox(height: 12),
+
+            // --------------------------------------------------
+            // LATER BUTTON
+            // --------------------------------------------------
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: downloading
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                      },
+                child: const Text('LATER'),
+              ),
+            ),
+
+            // --------------------------------------------------
+            // ERROR
+            // --------------------------------------------------
+
+            if (errorMessage != null) ...[
+              const SizedBox(height: 20),
+
+              Text(
+                errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .error,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // ----------------------------------------------------------
+    // UP TO DATE
+    // ----------------------------------------------------------
+
+    return _buildUpToDate();
+  }
+
+  // ============================================================
+  // UP TO DATE
+  // ============================================================
+
+  Widget _buildUpToDate() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(25),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle,
+              size: 70,
+              color: Colors.green.shade600,
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'You are up to date!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
             const SizedBox(height: 10),
 
-            TextButton(
-              onPressed:
-                  downloading
-                      ? null
-                      : _showUpdateDialog,
+            const Text(
+              'No new version is available.',
+              textAlign: TextAlign.center,
+            ),
 
-              child: const Text(
-                'VIEW UPDATE DETAILS',
+            const SizedBox(height: 25),
+
+            OutlinedButton.icon(
+              onPressed: checkingForUpdate
+                  ? null
+                  : _checkForUpdate,
+              icon: const Icon(Icons.refresh),
+              label: const Text(
+                'CHECK FOR UPDATES',
               ),
             ),
           ],
@@ -512,49 +593,486 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildUpToDate() {
-    return Column(
-      children: [
-        const Icon(
-          Icons.check_circle,
-          size: 60,
-          color: Colors.green,
+  // ============================================================
+  // MAIN PAGE
+  // ============================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.blue.shade50,
+
+      // --------------------------------------------------------
+      // RIGHT SIDE UPDATE DRAWER
+      // --------------------------------------------------------
+
+      endDrawer: _buildUpdateDrawer(),
+
+      // --------------------------------------------------------
+      // APP BAR
+      // --------------------------------------------------------
+
+      appBar: AppBar(
+        backgroundColor: Colors.blue.shade700,
+        foregroundColor: Colors.white,
+
+        title: const Text(
+          'CI/CD Update Demo',
         ),
 
-        const SizedBox(height: 15),
+        actions: [
+          Builder(
+            builder: (context) {
+              return IconButton(
+                tooltip: 'Updates',
+                onPressed: () {
+                  Scaffold.of(context).openEndDrawer();
+                },
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.system_update,
+                    ),
+
+                    // Notification dot when update exists
+                    if (updateInfo != null)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          width: 9,
+                          height: 9,
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          IconButton(
+            tooltip: 'Check for updates',
+            onPressed: checkingForUpdate
+                ? null
+                : _checkForUpdate,
+            icon: const Icon(
+              Icons.refresh,
+            ),
+          ),
+        ],
+      ),
+
+      // --------------------------------------------------------
+      // MAIN APP CONTENT
+      // --------------------------------------------------------
+
+    // --------------------------------------------------------
+// MAIN APP CONTENT
+// --------------------------------------------------------
+body: SafeArea(
+  child: SingleChildScrollView(
+    padding: const EdgeInsets.all(24),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        // ----------------------------------------------------
+        // WELCOME SECTION
+        // ----------------------------------------------------
+        const SizedBox(height: 20),
+
+        Text(
+          'Welcome 👋',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.grey.shade700,
+          ),
+        ),
+
+        const SizedBox(height: 6),
 
         const Text(
-          'You are up to date!',
+          "Jokku's Application",
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 32,
             fontWeight: FontWeight.bold,
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
+        Text(
+          'Your simple Flutter application',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey.shade600,
+          ),
+        ),
+
+        const SizedBox(height: 35),
+
+        // ----------------------------------------------------
+        // MAIN APPLICATION CARD
+        // ----------------------------------------------------
+        Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        Icons.apps,
+                        size: 32,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Jokku's Application",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          SizedBox(height: 4),
+
+                          Text(
+                            'Application Home',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 25),
+
+                const Text(
+                  'Welcome to the application.',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Text(
+                  'This is the main home page of Jokku\'s application. '
+                  'Use the update icon in the top-right corner to '
+                  'check for new versions.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // ----------------------------------------------------
+        // APPLICATION FEATURES
+        // ----------------------------------------------------
         const Text(
-          'No new version is available.',
-          textAlign: TextAlign.center,
+          'Quick Access',
+          style: TextStyle(
+            fontSize: 21,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        const SizedBox(height: 15),
+
+        Row(
+          children: [
+
+            // APP INFO
+            Expanded(
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 35,
+                        color: Colors.blue.shade700,
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      const Text(
+                        'App Info',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      Text(
+                        'Version $currentVersion',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // UPDATES
+            Expanded(
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    Scaffold.of(context).openEndDrawer();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.system_update,
+                          size: 35,
+                          color: Colors.orange.shade700,
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        const Text(
+                          'Updates',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        Text(
+                          updateInfo != null
+                              ? 'Update available'
+                              : 'You are up to date',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: updateInfo != null
+                                ? Colors.orange.shade700
+                                : Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 30),
+
+        // ----------------------------------------------------
+        // CURRENT VERSION
+        // ----------------------------------------------------
+        Card(
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+
+                Icon(
+                  Icons.verified,
+                  size: 32,
+                  color: Colors.green.shade600,
+                ),
+
+                const SizedBox(width: 15),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+
+                      const Text(
+                        'Installed Version',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      Text(
+                        'v$currentVersion',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      if (currentBuildNumber.isNotEmpty)
+                        Text(
+                          'Build $currentBuildNumber',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // UPDATE INDICATOR
+                if (updateInfo != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Update',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Latest',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 30),
+
+        // ----------------------------------------------------
+        // CHECK FOR UPDATES
+        // ----------------------------------------------------
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: checkingForUpdate
+                ? null
+                : _checkForUpdate,
+            icon: checkingForUpdate
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.refresh),
+            label: Text(
+              checkingForUpdate
+                  ? 'CHECKING...'
+                  : 'CHECK FOR UPDATES',
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 30),
+
+        // ----------------------------------------------------
+        // FOOTER
+        // ----------------------------------------------------
+        Center(
+          child: Text(
+            "Jokku's Application",
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade500,
+            ),
+          ),
         ),
 
         const SizedBox(height: 20),
-
-        OutlinedButton.icon(
-          onPressed:
-              checkingForUpdate
-                  ? null
-                  : _checkForUpdate,
-
-          icon: const Icon(
-            Icons.refresh,
-          ),
-
-          label: const Text(
-            'CHECK FOR UPDATES',
-          ),
-        ),
       ],
+    ),
+  ),
+),
+
+      
     );
   }
 }
